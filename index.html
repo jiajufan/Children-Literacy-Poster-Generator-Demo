@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>儿童识字报生成器</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 标题区域 -->
+    <header class="header">
+      <h1>📚 儿童识字报生成器</h1>
+      <p>输入主题和标题，AI 帮你生成漂亮的识字小报</p>
+    </header>
+
+    <!-- API 设置卡片 -->
+    <div class="main-card api-card">
+      <div class="api-header">
+        <h3>🔑 API 设置</h3>
+        <div class="api-status-area">
+          <span class="api-status" id="apiStatus"></span>
+          <button type="button" id="deleteApiBtn" class="btn-delete" style="display: none;">删除</button>
+        </div>
+      </div>
+
+      <!-- 平台选择 -->
+      <div class="form-group">
+        <label for="platformSelect">选择平台</label>
+        <select id="platformSelect" class="param-select">
+          <option value="kie" selected>Kie.ai（Kie）</option>
+          <option value="minimax">MiniMax</option>
+        </select>
+      </div>
+
+      <!-- Kie.ai 设置 -->
+      <div id="kieSettings">
+        <!-- 模型选择 -->
+        <div class="form-group">
+          <label for="modelSelect">选择模型</label>
+          <select id="modelSelect" class="param-select">
+            <option value="nano-banana-2-lite" selected>Nano Banana 2 Lite（积分低）</option>
+            <option value="nano-banana-pro">Nano Banana Pro（积分高）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="apiKey">Kie.ai API Key</label>
+          <div class="api-input-row">
+            <input
+              type="password"
+              id="apiKey"
+              placeholder="请输入 Kie.ai API Key"
+              autocomplete="off"
+            >
+            <button type="button" id="saveApiBtn" class="btn-save">保存</button>
+          </div>
+          <p class="form-hint">
+            获取 API Key：<a href="https://kie.ai/api-key" target="_blank">kie.ai/api-key</a>
+          </p>
+        </div>
+
+        <!-- Pro 参数选项 -->
+        <div class="form-group" id="proParams" style="display: none;">
+          <label>生成参数</label>
+          <div class="param-row">
+            <div class="param-item">
+              <span class="param-label">分辨率</span>
+              <select id="resolution" class="param-select">
+                <option value="1K" selected>1K</option>
+                <option value="2K">2K</option>
+                <option value="4K">4K</option>
+              </select>
+            </div>
+            <div class="param-item">
+              <span class="param-label">图片格式</span>
+              <select id="outputFormat" class="param-select">
+                <option value="jpg" selected>JPG</option>
+                <option value="png">PNG</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MiniMax 设置 -->
+      <div id="minimaxSettings" style="display: none;">
+        <div class="form-group">
+          <label for="miniMaxModelSelect">选择模型</label>
+          <select id="miniMaxModelSelect" class="param-select">
+            <option value="image-01" selected>image-01</option>
+            <option value="image-01-live">image-01-live（支持画风）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="miniMaxApiKey">MiniMax API Key</label>
+          <div class="api-input-row">
+            <input
+              type="password"
+              id="miniMaxApiKey"
+              placeholder="请输入 MiniMax API Key"
+              autocomplete="off"
+            >
+            <button type="button" id="saveMiniMaxBtn" class="btn-save">保存</button>
+          </div>
+          <p class="form-hint">
+            获取 API Key：<a href="https://platform.minimaxi.com/user-center/basic-information/interface-key" target="_blank">platform.minimaxi.com</a>
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label>生成参数</label>
+          <div class="param-row">
+            <div class="param-item">
+              <span class="param-label">宽高比</span>
+              <select id="miniMaxAspectRatio" class="param-select">
+                <option value="3:4" selected>3:4（竖版A4）</option>
+                <option value="1:1">1:1（方形）</option>
+                <option value="16:9">16:9（横版）</option>
+                <option value="4:3">4:3</option>
+                <option value="9:16">9:16（竖版）</option>
+              </select>
+            </div>
+            <div class="param-item">
+              <span class="param-label">画风（仅Live）</span>
+              <select id="miniMaxStyle" class="param-select">
+                <option value="">默认</option>
+                <option value="photographic">摄影</option>
+                <option value="anime">动漫</option>
+                <option value="digital_art">数字艺术</option>
+                <option value="illustration">插画</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主卡片 -->
+    <div class="main-card">
+      <!-- 主题输入 -->
+      <div class="form-group">
+        <label for="theme">
+          主题/场景 <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="theme"
+          placeholder="例如：超市、医院、公园、学校"
+          autocomplete="off"
+        >
+        <p class="form-hint">
+          💡 点击下方标签快速选择：
+        </p>
+        <div class="scene-suggestions" id="sceneSuggestions">
+          <span class="scene-tag" data-scene="超市">超市</span>
+          <span class="scene-tag" data-scene="医院">医院</span>
+          <span class="scene-tag" data-scene="公园">公园</span>
+          <span class="scene-tag" data-scene="学校">学校</span>
+          <span class="scene-tag" data-scene="餐厅">餐厅</span>
+          <span class="scene-tag" data-scene="家庭">家庭</span>
+          <span class="scene-tag" data-scene="图书馆">图书馆</span>
+          <span class="scene-tag" data-scene="游乐场">游乐场</span>
+          <span class="scene-tag" data-scene="海滩">海滩</span>
+          <span class="scene-tag" data-scene="消防站">消防站</span>
+        </div>
+      </div>
+
+      <!-- 标题输入 -->
+      <div class="form-group">
+        <label for="title">
+          小报标题 <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="title"
+          placeholder="例如：《走进超市》《快乐医院》"
+          autocomplete="off"
+        >
+      </div>
+
+      <!-- 生成按钮 -->
+      <button type="button" id="generateBtn" class="btn-primary" disabled>
+        🔒 请先设置 API Key
+      </button>
+
+      <!-- 状态显示 -->
+      <div id="status" class="status-bar status idle">
+        等待输入
+      </div>
+
+      <!-- 进度条 -->
+      <div id="progressContainer" class="progress-container" style="display: none;">
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar" style="width: 15%;"></div>
+          <span class="progress-arrow" style="left: 5%;">➡️</span>
+          <span class="progress-text">15%</span>
+        </div>
+      </div>
+
+      <!-- 错误提示 -->
+      <div id="error" class="error-message"></div>
+
+      <!-- 提示词预览 -->
+      <div id="promptPreview" class="prompt-preview">
+        <h4>📝 生成的提示词：</h4>
+        <pre></pre>
+      </div>
+    </div>
+
+    <!-- 结果区域 -->
+    <div id="result" class="result-area"></div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>Powered by <a href="https://kie.ai" target="_blank">Kie.ai</a> Nano Banana Pro</p>
+    </footer>
+  </div>
+
+  <!-- 引入配置文件 -->
+  <script src="config.js"></script>
+  <!-- 引入提示词构建器 -->
+  <script src="prompt-builder.js"></script>
+  <!-- 引入核心应用逻辑 -->
+  <script src="app.js"></script>
+
+  <script>
+    // ===== API 设置逻辑 =====
+    const platformSelect = document.getElementById('platformSelect');
+    const kieSettings = document.getElementById('kieSettings');
+    const minimaxSettings = document.getElementById('minimaxSettings');
+    const apiKeyInput = document.getElementById('apiKey');
+    const saveApiBtn = document.getElementById('saveApiBtn');
+    const deleteApiBtn = document.getElementById('deleteApiBtn');
+    const apiStatus = document.getElementById('apiStatus');
+    const generateBtn = document.getElementById('generateBtn');
+    const modelSelect = document.getElementById('modelSelect');
+    const proParams = document.getElementById('proParams');
+    const miniMaxApiKeyInput = document.getElementById('miniMaxApiKey');
+    const saveMiniMaxBtn = document.getElementById('saveMiniMaxBtn');
+
+    // 隐藏 API Key 中间部分，只显示前3后3位
+    function maskApiKey(key) {
+      if (!key || key.length <= 8) return key || '';
+      return key.substring(0, 3) + '***' + key.substring(key.length - 3);
+    }
+
+    // 获取当前平台的 API Key
+    function getCurrentApiKey() {
+      const platform = platformSelect.value;
+      if (platform === 'kie') {
+        return localStorage.getItem('nano_banana_api_key') || '';
+      } else {
+        return localStorage.getItem('minimax_api_key') || '';
+      }
+    }
+
+    // 更新 API 状态显示
+    function updateApiStatus() {
+      const platform = platformSelect.value;
+      const platformName = platform === 'kie' ? 'Kie.ai' : 'MiniMax';
+      const saved = getCurrentApiKey();
+
+      if (saved) {
+        const masked = maskApiKey(saved);
+        apiStatus.textContent = `✅ ${platformName} 已保存 ${masked}`;
+        apiStatus.className = 'api-status success';
+        deleteApiBtn.style.display = 'inline-block';
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '🎨 生成识字小报';
+      } else {
+        apiStatus.textContent = `❌ ${platformName} 未设置`;
+        apiStatus.className = 'api-status error';
+        deleteApiBtn.style.display = 'none';
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '🔒 请先设置 API Key';
+      }
+    }
+
+    // 平台切换
+    platformSelect.addEventListener('change', () => {
+      const platform = platformSelect.value;
+      if (platform === 'kie') {
+        kieSettings.style.display = 'block';
+        minimaxSettings.style.display = 'none';
+      } else {
+        kieSettings.style.display = 'none';
+        minimaxSettings.style.display = 'block';
+      }
+      updateApiStatus();
+    });
+
+    // Kie API Key 保存
+    saveApiBtn.addEventListener('click', () => {
+      const key = apiKeyInput.value.trim();
+      if (key) {
+        localStorage.setItem('nano_banana_api_key', key);
+        CONFIG.API_KEY = key;
+        updateApiStatus();
+        apiKeyInput.blur();
+      } else {
+        alert('请输入有效的 API Key');
+      }
+    });
+
+    // MiniMax API Key 保存
+    saveMiniMaxBtn.addEventListener('click', () => {
+      const key = miniMaxApiKeyInput.value.trim();
+      if (key) {
+        localStorage.setItem('minimax_api_key', key);
+        updateApiStatus();
+        miniMaxApiKeyInput.blur();
+      } else {
+        alert('请输入有效的 API Key');
+      }
+    });
+
+    // 删除 API Key
+    deleteApiBtn.addEventListener('click', () => {
+      if (confirm('确定要删除已保存的 API Key 吗？')) {
+        const platform = platformSelect.value;
+        if (platform === 'kie') {
+          localStorage.removeItem('nano_banana_api_key');
+          apiKeyInput.value = '';
+        } else {
+          localStorage.removeItem('minimax_api_key');
+          miniMaxApiKeyInput.value = '';
+        }
+        updateApiStatus();
+      }
+    });
+
+    // Kie 模型选择
+    modelSelect.addEventListener('change', () => {
+      if (modelSelect.value === 'nano-banana-pro') {
+        proParams.style.display = 'block';
+      } else {
+        proParams.style.display = 'none';
+      }
+    });
+
+    // 初始化
+    function initSettings() {
+      // Kie
+      const kieKey = localStorage.getItem('nano_banana_api_key');
+      if (kieKey) apiKeyInput.value = kieKey;
+
+      // MiniMax
+      const mmKey = localStorage.getItem('minimax_api_key');
+      if (mmKey) miniMaxApiKeyInput.value = mmKey;
+
+      // 平台状态
+      if (platformSelect.value !== 'kie') {
+        platformSelect.dispatchEvent(new Event('change'));
+      } else {
+        if (modelSelect.value !== 'nano-banana-pro') {
+          proParams.style.display = 'none';
+        }
+      }
+      updateApiStatus();
+    }
+
+    initSettings();
+
+    // ===== 场景选择交互 =====
+    document.querySelectorAll('.scene-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        // 移除其他激活状态
+        document.querySelectorAll('.scene-tag').forEach(t => t.classList.remove('active'));
+        // 设置当前激活
+        tag.classList.add('active');
+        // 填充输入框
+        document.getElementById('theme').value = tag.dataset.scene;
+        // 聚焦到标题输入
+        document.getElementById('title').focus();
+      });
+    });
+  </script>
+</body>
+</html>
